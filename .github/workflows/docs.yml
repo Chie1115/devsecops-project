@@ -48,12 +48,12 @@ jobs:
                   version: '1.0.0',
                 },
               },
-              apis: ['./api/server.js'],
+              apis: ['./server.js'],
             };
             const spec = swaggerJsdoc(options);
             fs.writeFileSync('openapi.json', JSON.stringify(spec, null, 2));
           "
-        working-directory: . # Run this in the root directory
+        working-directory: ./api # <<< ここを修正しました！
 
       # Step 5: Upload the generated openapi.json file as an artifact.
       # This allows other jobs in the same workflow to use this file.
@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: openapi-spec
-          path: openapi.json
+          path: api/openapi.json # <<< ここも修正しました！
 
   # This job takes the generated spec and deploys it to GitHub Pages.
   deploy-docs:
