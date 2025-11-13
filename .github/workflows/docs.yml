@@ -68,13 +68,13 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Generate HTML docs from OpenAPI spec
-        uses: wj-Mcat/swagger-ui-superset-generator@v2.2.2
+        uses: wj-Mcat/swagger-ui-generator@v2.2.2 # <<< ここを修正しました！
         with:
           spec-path: 'openapi.json'
 
       - name: Create index.html to load Swagger UI
         run: |
-          mv swagger-ui-superset/* .
+          mv swagger-ui/* .
           echo '<!DOCTYPE html>
           <html lang="en">
           <head>
@@ -111,6 +111,4 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the entire directory including the new index.html
           path: '.'
-
