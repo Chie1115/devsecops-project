@@ -1,0 +1,38 @@
+# Specifies the Docker Compose file format version.
+version: '3.8'
+
+# Define all the containerized services.
+services:
+  # 1. The Backend API Service
+  api:
+    build: ./api
+    ports:
+      - "3002:3001"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/mydatabase
+    depends_on:
+      - db
+
+  # 2. The Database Service
+  db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # 3. The Frontend Service
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+# Define the named volume for data persistence.
+volumes:
+  postgres_data:
