@@ -1,16 +1,12 @@
 # Name of the GitHub Actions workflow.
 name: Generate and Deploy API Docs
 
-# Controls when the workflow will run.
 on:
-  # Run this workflow on pushes to the 'main' branch.
   push:
     branches:
       - main
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # This job generates the OpenAPI specification file.
   generate-docs:
     runs-on: ubuntu-latest
     steps:
@@ -52,21 +48,16 @@ jobs:
           name: openapi-spec
           path: api/openapi.json
 
-  # This job takes the generated spec and deploys it to GitHub Pages.
   deploy-docs:
     needs: generate-docs
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       pages: write
       id-token: write
-
-    # Define the deployment environment.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -76,20 +67,50 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # Step 3: Use a pre-made action to convert the OpenAPI spec to a beautiful HTML page.
       - name: Generate HTML docs from OpenAPI spec
         uses: wj-Mcat/swagger-ui-superset-generator@v2.2.2
         with:
-          spec-path: 'openapi.json' # <<< ここを修正しました！
+          spec-path: 'openapi.json'
 
-      # Step 4: Upload the generated HTML site as a GitHub Pages artifact.
+      - name: Create index.html to load Swagger UI
+        run: |
+          mv swagger-ui-superset/* .
+          echo '<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>API Docs</title>
+            <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
+            <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
+            <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+            <script>
+            window.onload = function() {
+              const ui = SwaggerUIBundle({
+                url: "openapi.json",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                  SwaggerUIBundle.presets.apis,
+                  SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                  SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout"
+              });
+              window.ui = ui;
+            };
+            </script>
+          </body>
+          </html>' > index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './swagger-ui-superset'
-
-      # Step 5: Deploy the artifact to GitHub Pages.
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          # Upload the entire directory including the new index.html
+          path: '.'
 
